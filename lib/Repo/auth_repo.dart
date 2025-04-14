@@ -21,15 +21,21 @@ final authStateProvider = StreamProvider<User?>((ref) {
   return firebaseAuth.authStateChanges();
 });
 
-final authFuture = FutureProvider((ref) async {
-  final res = FirebaseAuth.instance.currentUser;
-  if (res != null) {
+final authFuture = FutureProvider.autoDispose((ref) async {
+  try {
+    final res = FirebaseAuth.instance.currentUser;
+    if (res == null) {
+      ref.read(userProvider.notifier).state = null;
+      return;
+    }
     final user =
         await FirebaseFirestore.instance.collection("Users").doc(res.uid).get();
     if (user.data() != null) {
       UserModel userdata = UserModel.fromMap(user.data()!);
       ref.read(userProvider.notifier).state = userdata;
     }
+  } catch (e) {
+    rethrow;
   }
 });
 

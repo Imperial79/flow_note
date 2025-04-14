@@ -10,12 +10,16 @@ import 'package:go_router/go_router.dart';
 final routeProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authFuture);
   final user = ref.watch(userProvider);
+
   return GoRouter(
-    initialLocation: "/login",
+    initialLocation: "/",
     redirect: (context, state) {
       log("${state.fullPath}");
+
+      // Redirect to splash screen while auth state is loading
       if (authState.isLoading) return "/splash";
 
+      // Redirect to login if user is not authenticated and accessing a protected route
       if (user == null &&
           ![
             '/login',
@@ -26,26 +30,20 @@ final routeProvider = Provider<GoRouter>((ref) {
           ].contains(state.fullPath)) {
         return '/login';
       }
+
+      // Redirect to home if user is authenticated and tries to access login
       if (user != null && state.fullPath == '/login') {
         return '/';
       }
 
+      // Allow navigation to the requested route
       return null;
     },
     routes: [
-      // GoRoute(
-      //   path: '/server-error',
-      //   builder: (context, state) => const Server_Error_UI(),
-      // ),
       GoRoute(path: "/splash", builder: (context, state) => Splash_UI()),
-
       GoRoute(path: "/", builder: (context, state) => Root_UI()),
       GoRoute(path: "/login", builder: (context, state) => Login_UI()),
-      // GoRoute(path: "/register", builder: (context, state) => Register_UI()),
-      // GoRoute(
-      //   path: "/forgot-password",
-      //   builder: (context, state) => Forgot_Password_UI(),
-      // ),
+      // Add other routes as needed
     ],
   );
 });
